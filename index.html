@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lunar's personal blog</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="header">
+        <div class="title-group">
+            <h1>My Blog</h1>
+            <p>Welcome to my space where I share what I love!</p>
+        </div>
+        <nav class="nav">
+            <a href="index.html">Home</a>
+            <a href="about.html">About Me</a>
+        </nav>
+    </div>
+
+    <div id="blogPosts">
+        <!-- Blog posts will be dynamically inserted here -->
+    </div>
+    <script>
+        async function loadPosts() {
+            try {
+                const response = await fetch('public/posts.json');
+                const posts = await response.json();
+                
+                const blogPostsContainer = document.getElementById('blogPosts');
+                blogPostsContainer.innerHTML = posts.map(post => `
+                    <div class="blog-post">
+                        <h2>${post.title}</h2>
+                        <p class="post-date">Posted on ${post.date}</p>
+                        <p>${post.content}</p>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading posts:', error);
+            }
+        }
+    
+        loadPosts();
+        setInterval(loadPosts, 30000);
+    </script>
+    
+</body>
+</html>
