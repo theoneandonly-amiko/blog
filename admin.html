@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Admin</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="header">
+        <div class="admin-controls">
+            <button id="logoutBtn" onclick="logout()">Logout</button>
+        </div>
+        <h1>Blog Admin Panel</h1>
+    </div>
+
+    <div id="loginSection">
+        <div class="login-container">
+            <h2>Admin Login</h2>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <input type="text" id="username" placeholder="Username" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="adminPanel" class="admin-panel hidden">
+        <h3>Create New Post</h3>
+        <form id="postForm" onsubmit="handleNewPost(event)">
+            <input type="text" id="postTitle" placeholder="Post Title" required>
+            <textarea id="postContent" placeholder="Write your post here..." required></textarea>
+            <button type="submit">Publish Post</button>
+        </form>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        
+        async function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('blogToken', data.token);
+                    showAdminUI();
+                } else {
+                    alert('Login failed. Please check your credentials.');
+                }
+            } catch (error) {
+                alert('Login failed. Please try again.');
+            }
+        }
+
+        function showAdminUI() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('adminPanel').classList.remove('hidden');
+        }
+
+        function logout() {
+            localStorage.removeItem('blogToken');
+            window.location.reload();
+        }
+
+        // Check authentication on page load
+        window.onload = async function() {
+            const token = localStorage.getItem('blogToken');
+            if (token) {
+                try {
+                    const response = await fetch(`${API_URL}/verify`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        showAdminUI();
+                    }
+                } catch (error) {
+                    logout();
+                }
+            }
+        }
+        async function handleNewPost(event) {
+            event.preventDefault();
+            const token = localStorage.getItem('blogToken');
+            const title = document.getElementById('postTitle').value;
+            const content = document.getElementById('postContent').value;
+        
+            try {
+                const response = await fetch(`${API_URL}/posts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ title, content })
+                });
+
+                if (response.ok) {
+                    document.getElementById('postTitle').value = '';
+                    document.getElementById('postContent').value = '';
+                    alert('Post published successfully!');
+                }
+            } catch (error) {
+                alert('Failed to publish post');
+            }
+        }
+        
+    </script>
+</body>
+</html>
